@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter } from 'recharts';
 import { Activity, TrendingUp, TrendingDown, Target, Database, BarChart3 } from 'lucide-react';
+import CandlestickChart from './CandlestickChart';
 
 // Simulated trading data
 const generateCandleData = () => {
@@ -51,6 +51,7 @@ const TradingBot = () => {
   const [trades, setTrades] = useState(generateTradeHistory());
   const [isRunning, setIsRunning] = useState(false);
   const [currentPrice, setCurrentPrice] = useState(100.45);
+  const [selectedSymbol, setSelectedSymbol] = useState('BTC-USD');
   const [stats, setStats] = useState({
     totalTrades: 15,
     winRate: 73.3,
@@ -112,6 +113,17 @@ const TradingBot = () => {
             <div className="text-right text-white">
               <p className="text-sm text-blue-200">Current Price</p>
               <p className="text-2xl font-bold">${currentPrice}</p>
+            </div>
+            <div>
+              <select 
+                value={selectedSymbol} 
+                onChange={(e) => setSelectedSymbol(e.target.value)}
+                className="px-3 py-2 bg-white/10 text-white rounded border border-white/20 mr-4"
+              >
+                <option value="BTC-USD">BTC-USD</option>
+                <option value="ETH-USD">ETH-USD</option>
+                <option value="AAPL">AAPL</option>
+              </select>
             </div>
             <Button 
               onClick={toggleBot}
@@ -197,30 +209,11 @@ const TradingBot = () => {
               <CardHeader>
                 <CardTitle className="text-white flex items-center gap-2">
                   <BarChart3 className="h-5 w-5" />
-                  1-Minute Price Chart with Trendlines
+                  Real-Time Candlestick Chart with Trendlines
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="h-96">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={candleData.slice(-50)}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                      <XAxis dataKey="timestamp" stroke="rgba(255,255,255,0.7)" />
-                      <YAxis stroke="rgba(255,255,255,0.7)" />
-                      <Tooltip 
-                        contentStyle={{ 
-                          backgroundColor: 'rgba(0,0,0,0.8)', 
-                          border: '1px solid rgba(255,255,255,0.2)',
-                          borderRadius: '8px',
-                          color: 'white'
-                        }} 
-                      />
-                      <Line type="monotone" dataKey="close" stroke="#60a5fa" strokeWidth={2} dot={false} />
-                      <Line type="monotone" dataKey="high" stroke="#34d399" strokeWidth={1} strokeDasharray="5 5" dot={false} />
-                      <Line type="monotone" dataKey="low" stroke="#f87171" strokeWidth={1} strokeDasharray="5 5" dot={false} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
+                <CandlestickChart symbol={selectedSymbol} className="h-96" />
               </CardContent>
             </Card>
           </TabsContent>
