@@ -46,6 +46,8 @@ const generateTradeHistory = () => {
 };
 
 const TradingBot = () => {
+  console.log('TradingBot component rendering');
+  
   const [candleData, setCandleData] = useState(generateCandleData());
   const [signals, setSignals] = useState(generateTradingSignals());
   const [trades, setTrades] = useState(generateTradeHistory());
@@ -95,6 +97,8 @@ const TradingBot = () => {
       </CardContent>
     </Card>
   );
+
+  console.log('TradingBot render with selectedSymbol:', selectedSymbol);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900 p-6">
@@ -213,7 +217,9 @@ const TradingBot = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <CandlestickChart symbol={selectedSymbol} className="h-96" />
+                <div className="h-96">
+                  <CandlestickChart symbol={selectedSymbol} className="h-full" />
+                </div>
               </CardContent>
             </Card>
           </TabsContent>

@@ -25,22 +25,36 @@ interface CandlestickChartProps {
 }
 
 const fetchCandleData = async (symbol: string): Promise<ChartData> => {
-  const response = await fetch(`http://localhost:8000/api/market-data/${symbol}?timeframe=1m&days=1`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch candle data');
+  console.log('Fetching candle data for symbol:', symbol);
+  try {
+    const response = await fetch(`http://localhost:8000/api/market-data/${symbol}?timeframe=1m&days=1`);
+    console.log('Response status:', response.status);
+    if (!response.ok) {
+      throw new Error(`Failed to fetch candle data: ${response.status} ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('Received data:', data);
+    return data;
+  } catch (error) {
+    console.error('Fetch error:', error);
+    throw error;
   }
-  return response.json();
 };
 
 const CandlestickChart: React.FC<CandlestickChartProps> = ({ symbol, className = "" }) => {
   const [dimensions, setDimensions] = useState({ width: 800, height: 400 });
 
-  const { data, error, refetch } = useQuery({
+  console.log('CandlestickChart rendering with symbol:', symbol);
+
+  const { data, error, isLoading, refetch } = useQuery({
     queryKey: ['candleData', symbol],
     queryFn: () => fetchCandleData(symbol),
-    refetchInterval: 60000, // Auto-update every 60 seconds
-    retry: 3,
+    refetchInterval: 60000,
+    retry: false, // Disable retry to see errors immediately
+    enabled: true, // Ensure query is enabled
   });
+
+  console.log('Query state:', { data, error, isLoading });
 
   // Handle window resize for responsive design
   useEffect(() => {
@@ -66,6 +80,7 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ symbol, className =
       <div className="flex items-center justify-center h-96 text-white">
         <div className="text-center">
           <p className="text-red-400 mb-2">Failed to load chart data</p>
+          <p className="text-red-300 text-sm mb-4">{error.message}</p>
           <button 
             onClick={() => refetch()} 
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -77,13 +92,36 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ symbol, className =
     );
   }
 
-  if (!data) {
+  if (isLoading) {
+    console.log('Loading chart data...');
     return (
       <div className="flex items-center justify-center h-96 text-white">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-2"></div>
+          <p className="text-blue-200">Loading chart data...</p>
+        </div>
       </div>
     );
   }
+
+  if (!data || !data.data || data.data.length === 0) {
+    console.log('No data available');
+    return (
+      <div className="flex items-center justify-center h-96 text-white">
+        <div className="text-center">
+          <p className="text-yellow-400 mb-2">No chart data available</p>
+          <button 
+            onClick={() => refetch()} 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  console.log('Processing chart data, count:', data.data.length);
 
   // Prepare data for Plotly candlestick chart
   const candleData = data.data.map(candle => ({
@@ -146,6 +184,8 @@ const CandlestickChart: React.FC<CandlestickChartProps> = ({ symbol, className =
     modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
     responsive: true,
   };
+
+  console.log('Rendering Plotly chart');
 
   return (
     <div id="chart-container" className={`w-full ${className}`}>
